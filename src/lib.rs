@@ -107,7 +107,7 @@ mod sealed {
 ///
 /// # Safety
 /// - `next` and `previous` must be inverses
-/// - `from_usize` and `to_usize` only panic on out-of-range values
+/// - `from_usize` and `to_usize` must only panic on out-of-range values
 pub unsafe trait Index: Copy + PartialEq + Eq + PartialOrd + Ord + sealed::Sealed {
     fn next(self) -> Option<Self>;
     fn previous(self) -> Option<Self>;
