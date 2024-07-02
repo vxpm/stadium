@@ -247,6 +247,12 @@ where
             _phantom_data: PhantomData,
         }
     }
+
+    /// Maps the type of this [`Id`] to another. Intended to be used with [`Stadium::map`].
+    #[inline]
+    pub fn map<U>(value: Self) -> Id<U, I, G> {
+        Id::new(value.index, value.gen)
+    }
 }
 
 impl<T, I, G> Clone for Id<T, I, G>
@@ -586,6 +592,61 @@ where
             .iter_mut()
             .filter_map(|seat| seat.state.as_value_mut())
     }
+
+    /// Maps every value in this stadium to another value of, possibly, another type, as long as
+    /// they have the same size and alignment. This function will fail to compile if the
+    /// requirements are not met.
+    #[inline]
+    pub fn map<U, F>(self, mut f: F) -> Stadium<U, I, G>
+    where
+        F: FnMut(T) -> U,
+    {
+        // put the assertions here for better error messages
+        const { assert!(size_of::<T>() == size_of::<U>()) };
+        const { assert!(align_of::<T>() == align_of::<U>()) };
+
+        /// Maps a [`Vec<T>`] to a [`Vec<U>`] as long as `T` and `U` have the same size and alignment.
+        unsafe fn map_vec<T, U, F>(mut vec: Vec<T>, mut f: F) -> Vec<U>
+        where
+            F: FnMut(T) -> U,
+        {
+            let (ptr, len, cap) = (vec.as_mut_ptr(), vec.len(), vec.capacity());
+
+            #[allow(clippy::mem_forget)]
+            std::mem::forget(vec);
+
+            for index in 0..len {
+                // SAFETY: the resulting pointer is within the same allocated object (the vec)
+                let offset_ptr = unsafe { ptr.add(index) };
+                // SAFETY: the pointer is aligned and points to a properly initialized T
+                let value = unsafe { std::ptr::read(offset_ptr) };
+                // SAFETY: the pointer is aligned
+                unsafe { std::ptr::write(offset_ptr.cast(), f(value)) }
+            }
+
+            // SAFETY: all the invariants are met
+            unsafe { Vec::from_raw_parts(ptr.cast::<U>(), len, cap) }
+        }
+
+        Stadium {
+            // SAFETY: assertions guarantee same size and alignment
+            seats: unsafe {
+                map_vec(self.seats, |seat| {
+                    let state = match seat.state {
+                        SeatState::Empty(next) => SeatState::Empty(next),
+                        SeatState::Occupied(value) => SeatState::Occupied(f(value)),
+                    };
+
+                    Seat {
+                        gen: seat.gen,
+                        state,
+                    }
+                })
+            },
+            occupied: self.occupied,
+            empty_seats_head: self.empty_seats_head,
+        }
+    }
 }
 
 impl<T, I, G> Default for Stadium<T, I, G>
@@ -625,7 +686,7 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::Stadium;
+    use crate::{Id, Stadium};
     use std::num::NonZeroU8;
 
     type TestStadium<T> = Stadium<T, u8, u8>;
@@ -710,5 +771,19 @@ mod test {
         assert_eq!(stadium_b.remove(baz), Some("baz"));
         let baz = stadium_b.insert("baz");
         assert_eq!(stadium_a.remove(baz), None);
+    }
+
+    #[test]
+    fn test_map() {
+        let mut stadium = TestStadium::new();
+        let a = stadium.insert(Some(false));
+        let b = stadium.insert(Some(true));
+
+        let stadium = stadium.map(|x| x.unwrap());
+        let a = Id::map(a);
+        let b = Id::map(b);
+
+        assert!(!stadium[a]);
+        assert!(stadium[b]);
     }
 }
