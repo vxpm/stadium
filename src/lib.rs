@@ -393,6 +393,27 @@ where
     }
 }
 
+impl<T, S> Clone for Stadium<T, S>
+where
+    S: StrategyKind,
+    S::Strategy<T>: Clone,
+{
+    #[inline]
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
+
+impl<T, S> PartialEq for Stadium<T, S>
+where
+    S: StrategyKind,
+    S::Strategy<T>: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
 pub type BumpStadium<T, I> = Stadium<T, strategy::bump::Bump<I>>;
 pub type RiskyStadium<T, I> = Stadium<T, strategy::risky::Risky<I>>;
 pub type GenStadium<T, I, G> = Stadium<T, strategy::gen::Generational<I, G>>;

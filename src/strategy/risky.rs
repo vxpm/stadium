@@ -13,7 +13,7 @@ use super::{
 };
 use std::marker::PhantomData;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 enum Slot<T, I> {
     Empty(Option<I>),
     Occupied(T),

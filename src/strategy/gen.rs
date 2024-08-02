@@ -72,6 +72,16 @@ pub struct Id<I, G> {
     gen: G,
 }
 
+impl<I, G> std::fmt::Debug for Id<I, G>
+where
+    I: std::fmt::Debug,
+    G: std::fmt::Debug,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}g{:?}", self.index, self.gen)
+    }
+}
+
 #[derive(Debug, Clone)]
 enum SlotState<T, I> {
     /// This slot is empty and might containt a pointer to the next empty slot on the stack.

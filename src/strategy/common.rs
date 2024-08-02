@@ -87,6 +87,28 @@ macro_rules! impl_index {
                     usize::try_from(self).unwrap()
                 }
             }
+
+            unsafe impl Index for std::num::NonZero<$ty> {
+                #[inline(always)]
+                fn next(self) -> Option<Self> {
+                    self.checked_add(1)
+                }
+
+                #[inline(always)]
+                fn previous(self) -> Option<Self> {
+                    Self::new(self.get() - 1)
+                }
+
+                #[inline(always)]
+                fn from_usize(value: usize) -> Self {
+                    Self::new(<$ty>::try_from(value + 1).unwrap()).unwrap()
+                }
+
+                #[inline(always)]
+                fn to_usize(self) -> usize {
+                    usize::try_from(self.get() - 1).unwrap()
+                }
+            }
         )*
     };
 }
