@@ -4,7 +4,9 @@ pub mod gen;
 pub mod risky;
 
 #[expect(unused_imports, reason = "imported for rustdoc")]
-use crate::{Id, Stadium};
+use crate::Id;
+#[expect(unused_imports, reason = "imported for rustdoc")]
+use crate::Stadium;
 
 /// A kind of strategy. See [`Strategy`].
 ///

@@ -9,7 +9,7 @@
 //!
 //! [`risky`]: super::risky
 
-use super::common::map_vec;
+use super::common::{self, map_vec};
 use super::StrategyExtMap;
 use super::{common::Index, Strategy, StrategyExtClear, StrategyExtRemove, StrategyKind};
 use std::marker::PhantomData;
@@ -74,11 +74,11 @@ pub struct Id<I, G> {
 
 impl<I, G> std::fmt::Debug for Id<I, G>
 where
-    I: std::fmt::Debug,
+    I: common::Index,
     G: std::fmt::Debug,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}g{:?}", self.index, self.gen)
+        write!(f, "{:?}g{:?}", self.index.to_usize(), self.gen)
     }
 }
 
@@ -161,11 +161,22 @@ where
     type Strategy<T> = GenerationalStrat<T, I, G>;
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct GenerationalStrat<T, I, G> {
     slots: Vec<Slot<T, I, G>>,
     occupied: I,
     empty_slots_head: Option<I>,
+}
+
+impl<T, I, G> std::fmt::Debug for GenerationalStrat<T, I, G>
+where
+    T: std::fmt::Debug,
+    I: common::Index + std::fmt::Debug,
+    G: Gen + std::fmt::Debug,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_map().entries(self.iter()).finish()
+    }
 }
 
 impl<T, I, G> GenerationalStrat<T, I, G>
