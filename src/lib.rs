@@ -129,6 +129,19 @@ where
     _phantom: PhantomData<*const T>,
 }
 
+unsafe impl<T, S> Send for Id<T, S>
+where
+    S: StrategyKind,
+    S::Id: Send,
+{
+}
+unsafe impl<T, S> Sync for Id<T, S>
+where
+    S: StrategyKind,
+    S::Id: Sync,
+{
+}
+
 impl<T, S> Id<T, S>
 where
     S: StrategyKind,
