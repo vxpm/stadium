@@ -201,6 +201,19 @@ where
     }
 }
 
+impl<T, S> std::hash::Hash for Id<T, S>
+where
+    S: StrategyKind,
+    S::Id: std::hash::Hash,
+{
+    fn hash<H>(&self, state: &mut H)
+    where
+        H: std::hash::Hasher,
+    {
+        self.inner.hash(state);
+    }
+}
+
 /// Alias of [`Id<Untyped, S>`].
 pub type UntypedId<S> = Id<Untyped, S>;
 
@@ -430,3 +443,7 @@ where
 pub type BumpStadium<T, I> = Stadium<T, strategy::bump::Bump<I>>;
 pub type RiskyStadium<T, I> = Stadium<T, strategy::risky::Risky<I>>;
 pub type GenStadium<T, I, G> = Stadium<T, strategy::gen::Generational<I, G>>;
+
+pub type BumpId<T, I> = Id<T, strategy::bump::Bump<I>>;
+pub type RiskyId<T, I> = Id<T, strategy::risky::Risky<I>>;
+pub type GenId<T, I, G> = Id<T, strategy::gen::Generational<I, G>>;

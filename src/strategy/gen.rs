@@ -66,7 +66,7 @@ impl_gen! {
     u128
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Id<I, G> {
     index: I,
     gen: G,
@@ -268,6 +268,7 @@ where
         slot.state.as_value_mut()
     }
 
+    #[inline(always)]
     fn insert(&mut self, value: T) -> <Self::Kind as StrategyKind>::Id {
         self.occupied = self
             .occupied
